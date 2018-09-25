@@ -28,13 +28,13 @@ class Blualliance():
         async with self.session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format("frc" + str(team_number)), headers={'If-Modified-Since': last_modified}) as resp:
             if resp.status == 200:
                 s = await resp.json()
-                return Team(**s)
+                return Team(self.session, **s)
 
     async def get_event(self, event_key: str, last_modified: str = "") -> Event:
         async with self.session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(event_key)) as resp:
             if resp.status == 200:
                 s = await resp.json()
-                return Event(**s)
+                return Event(self.session, **s)
 
     @property
     def session(self) -> aiohttp.ClientSession:
