@@ -1,3 +1,7 @@
+from . import constants
+from .alliance import Alliance
+
+
 class Event():
     def __init__(self, key: str = None, name: str = None, event_code: str = None,
                  event_type: int = None, district: dict = None, city: str = None,
@@ -26,3 +30,10 @@ class Event():
         self.webcasts = webcasts
         self.division_keys, self.parent_event_key = division_keys, parent_event_key
         self.playoff_type, self.playoff_type_string = playoff_type, playoff_type_string
+
+    async def get_alliances(self, client):
+        async with client.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/alliances") as resp:
+            if resp.status == 200:
+                a = await resp.json()
+                return [Alliance(**alliance) for alliance in a]
+                return await resp.json()
