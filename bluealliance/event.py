@@ -36,4 +36,3 @@ class Event():
             if resp.status == 200:
                 a = await resp.json()
                 return [Alliance(**alliance) for alliance in a]
-                return await resp.json()
