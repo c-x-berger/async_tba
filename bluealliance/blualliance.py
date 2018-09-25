@@ -1,8 +1,8 @@
 import asyncio
 import aiohttp
 from . import constants
-from . import Team
-from . import Event
+from .team import Team
+from .event import Event
 
 
 class Blualliance():
