@@ -1,3 +1,7 @@
+import aiohttp
+from . import constants
+from .mini_models import Robot
+
 class Team():
     def __init__(self, team_number: int, key: str = None, nickname: str = None,
                  name: str = None, city: str = None, state_prov: str = None,
@@ -6,7 +10,8 @@ class Team():
                  location_name: str = None, website: str = None, rookie_year: int = 0,
                  motto: str = None, home_championship: dict = {}):
         self.team_number = team_number
-        
+        self.key = key
+
         self.nickname = nickname
         self.name = name
 
@@ -14,11 +19,17 @@ class Team():
         self.gmaps_place_id, self.gmaps_url = gmaps_place_id, gmaps_url
         self.lat, self.lng = lat, lng
         self.location_name = location_name
-        
+
         self.website = website
-        
+
         self.rookie_year = rookie_year
 
         self.motto = motto
 
         self.home_championship = home_championship
+
+    async def get_robots(self, client: aiohttp.ClientSession):
+        async with client.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(self.key) + "/robots") as resp:
+            if resp.status == 200:
+                robots = await resp.json()
+                return [Robot(**r) for r in robots]
