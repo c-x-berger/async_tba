@@ -1,6 +1,7 @@
 import asyncio
 import aiohttp
 from . import constants
+from .team import Team
 
 
 class Blualliance():
@@ -21,3 +22,9 @@ class Blualliance():
                 return s
             elif r.status == 304:
                 return self.status
+
+    async def get_team(self, team_number: int, last_modified: str = "") -> Team:
+        async with self.session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format("frc" + str(team_number)), headers={'If-Modified-Since': last_modified}) as resp:
+            if resp.status == 200:
+                s = await resp.json()
+                return Team(**s)
