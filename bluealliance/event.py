@@ -1,10 +1,11 @@
 import aiohttp
 from . import constants
+from .model import Model
 from .alliance import Alliance
 from .team import Team
 
 
-class Event():
+class Event(Model):
     def __init__(self, session: aiohttp.ClientSession, key: str = None, name: str = None, event_code: str = None,
                  event_type: int = None, district: dict = None, city: str = None,
                  state_prov: str = None, country: str = None, start_date: str = None,
@@ -15,7 +16,7 @@ class Event():
                  website: str = None, first_event_id: str = None, first_event_code: str = None,
                  webcasts: list = None, division_keys: list = None, parent_event_key: str = None,
                  playoff_type: int = 0, playoff_type_string: str = None):
-        self.__session = session
+        super().__init__(session, key=key)
 
         self.key = key
         self.name, self.short_name = name, short_name
@@ -36,13 +37,13 @@ class Event():
         self.playoff_type, self.playoff_type_string = playoff_type, playoff_type_string
 
     async def get_alliances(self):
-        async with self.__session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/alliances") as resp:
+        async with self._session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/alliances") as resp:
             if resp.status == 200:
                 a = await resp.json()
-                return [Alliance(self.__session, **alliance) for alliance in a]
+                return [Alliance(self._session, **alliance) for alliance in a]
 
     async def get_teams(self):
-        async with self.__session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/teams") as resp:
+        async with self._session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/teams") as resp:
             if resp.status == 200:
                 teams = await resp.json()
-                return [Team(self.__session, **t) for t in teams]
+                return [Team(self._session, **t) for t in teams]

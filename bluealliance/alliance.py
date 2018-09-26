@@ -1,13 +1,15 @@
 import aiohttp
 from . import constants
+from .model import Model
 from .team import Team
 from typing import Dict, List, Union
 
 
-class Alliance():
-    def __init__(self, session: aiohttp.ClientSession, name: str = None, backup: Dict[str, str] = None, declines: List[str] = [], picks: List[str] = [],
+class Alliance(Model):
+    def __init__(self, session: aiohttp.ClientSession, name: str = None, backup: Dict[str, str] = None,
+                 declines: List[str] = [], picks: List[str] = [],
                  status: Dict[str, Union[str, None, Dict[str, int]]] = None):
-        self.__session = session
+        super().__init__(session)
 
         self._name = name
         self._backup = backup
@@ -28,19 +30,19 @@ class Alliance():
     async def get_declining_teams(self) -> List[Team]:
         r = []
         for team in self._declines:
-            async with self.__session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(int(team[3:]))) as resp:
+            async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(int(team[3:]))) as resp:
                 if resp.status == 200:
                     t = await resp.json()
-                    r.append(Team(self.__session, **t))
+                    r.append(Team(self._session, **t))
         return r
 
     async def get_teams(self) -> List[Team]:
         r = []
         for team in self._picks:
-            async with self.__session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(int(team[3:]))) as resp:
+            async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(int(team[3:]))) as resp:
                 if resp.status == 200:
                     t = await resp.json()
-                    r.append(Team(self.__session, **t))
+                    r.append(Team(self._session, **t))
         return r
 
     @property
