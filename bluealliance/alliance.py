@@ -2,7 +2,7 @@ import aiohttp
 from . import constants
 from .model import Model
 from .team import Team
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 
 class Alliance(Model):
@@ -30,7 +30,7 @@ class Alliance(Model):
     async def get_declining_teams(self) -> List[Team]:
         r = []
         for team in self._declines:
-            async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(int(team[3:]))) as resp:
+            async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(team)) as resp:
                 if resp.status == 200:
                     t = await resp.json()
                     r.append(Team(self._session, **t))
@@ -39,7 +39,7 @@ class Alliance(Model):
     async def get_teams(self) -> List[Team]:
         r = []
         for team in self._picks:
-            async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(int(team[3:]))) as resp:
+            async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(team)) as resp:
                 if resp.status == 200:
                     t = await resp.json()
                     r.append(Team(self._session, **t))
@@ -113,3 +113,44 @@ class Alliance(Model):
     def current_level_ties(self) -> int:
         """Number of ties for the alliance's current playoff round."""
         return self._current_level_ties
+
+
+class MatchAlliance(Model):
+    def __init__(self, session: aiohttp.ClientSession, score: int = None,
+                 team_keys: List[str] = None, surrogate_team_keys: Optional[List[str]] = None,
+                 dq_team_keys: Optional[List[str]] = None):
+        super().__init__(session)
+
+        self._score = score
+        self._team_keys = team_keys
+        self._surrogate_team_keys = surrogate_team_keys
+        self._dq_team_keys = dq_team_keys
+
+    @property
+    def score(self) -> int:
+        """Score for this alliance. Will be null or -1 for an unplayed match."""
+        return self._score
+
+    @property
+    def team_keys(self) -> List[str]:
+        """TBA Team keys (eg frc254) for teams on this alliance."""
+        return self._team_keys
+
+    async def get_teams(self):
+        r = []
+        for team_key in self.team_keys:
+            async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(team_key)) as resp:
+                if resp.status == 200:
+                    t = await resp.json()
+                    r.append(Team(self._session, **t))
+        return r
+
+    @property
+    def surrogate_team_keys(self) -> List[str]:
+        """TBA team keys (eg frc254) of any teams playing as a surrogate."""
+        return self._surrogate_team_keys
+
+    @property
+    def dq_team_keys(self) -> List[str]:
+        """TBA team keys (eg frc254) of any disqualified teams."""
+        return self._dq_team_keys
