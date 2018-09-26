@@ -39,7 +39,6 @@ class Blualliance():
             self._teams_cache, "frc" + str(team_number))
         head = {'If-Modified-Since': teamcache.last_modified}
         async with self.session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format("frc" + str(team_number)), headers=head) as resp:
-            print(resp.status)
             if resp.status == 200:
                 team = Team(self.session, **(await resp.json()))
                 self._teams_cache[team.key] = Datacache(
