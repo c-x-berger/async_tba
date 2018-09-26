@@ -1,7 +1,7 @@
 import aiohttp
 from . import constants
 from .model import Model
-from .mini_models import Robot
+from .mini_models import Robot, Datacache
 
 
 class Team(Model):
@@ -31,8 +31,15 @@ class Team(Model):
 
         self.home_championship = home_championship
 
+        self.robots = Datacache([], "", None)
+
     async def get_robots(self):
-        async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(self.key) + "/robots") as resp:
+        head = {'If-Modified-Since': self.robots.last_modified}
+        async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(self.key) + "/robots", headers=head) as resp:
+            print(resp.status)
             if resp.status == 200:
-                robots = await resp.json()
-                return [Robot(**r) for r in robots]
+                ret = [Robot(**r) for r in await resp.json()]
+                self.robots = Datacache(ret, resp.headers['Last-Modified'], None)
+                return ret
+            elif resp.status == 304:
+                return self.robots.data
