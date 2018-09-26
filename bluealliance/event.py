@@ -39,10 +39,10 @@ class Event():
         async with self.__session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/alliances") as resp:
             if resp.status == 200:
                 a = await resp.json()
-                return [Alliance(**alliance) for alliance in a]
+                return [Alliance(self.__session, **alliance) for alliance in a]
 
     async def get_teams(self):
         async with self.__session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/teams") as resp:
             if resp.status == 200:
                 teams = await resp.json()
-                return [Team(**t) for t in teams]
+                return [Team(self.__session, **t) for t in teams]
