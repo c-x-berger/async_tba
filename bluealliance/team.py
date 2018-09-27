@@ -38,7 +38,8 @@ class Team(Model):
         async with self._session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(self.key) + "/robots", headers=head) as resp:
             if resp.status == 200:
                 ret = [Robot(**r) for r in await resp.json()]
-                self.robots = Datacache(ret, resp.headers['Last-Modified'], None)
+                self.robots = Datacache(
+                    ret, resp.headers['Last-Modified'], None)
                 return ret
             elif resp.status == 304:
                 return self.robots.data
