@@ -41,23 +41,19 @@ class Event(Model):
         self._teams = Datacache([], "", None)
 
     async def get_alliances(self):
-        head = {'If-Modified-Since': self._alliances.last_modified}
-        async with self._session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/alliances", headers=head) as resp:
-            if resp.status == 200:
-                ret = [Alliance(self._session, **alliance) for alliance in await resp.json()]
-                self._alliances = Datacache(
-                    ret, resp.headers['Last-Modified'], None)
-                return ret
-            elif resp.status == 304:
-                return self._alliances.data
+        data = await self.connection.get_alliances(self.key, self._alliances.last_modified)
+        if data is not None:
+            alliances = [Alliance(self._session, **s) for s in data['data']]
+            self._alliances = Datacache(alliances, data["Last-Modified"], None)
+            return alliances
+        else:
+            return self._alliances.data
 
     async def get_teams(self):
-        head = {'If-Modified-Since': self._teams.last_modified}
-        async with self._session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(self.key) + "/teams", headers=head) as resp:
-            if resp.status == 200:
-                ret = [Team(self._session, **t) for t in await resp.json()]
-                self._teams = Datacache(
-                    ret, resp.headers['Last-Modified'], None)
-                return ret
-            elif resp.status == 304:
-                return self._teams.data
+        data = await self.connection.get_event_teams(self.key, self._teams.last_modified)
+        if data is not None:
+            teams = [Team(self._connection, **s) for s in data['data']]
+            self._teams = Datacache(teams, data['Last-Modified'], None)
+            return teams
+        else:
+            return self._teams.data

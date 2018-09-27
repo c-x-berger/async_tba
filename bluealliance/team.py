@@ -33,9 +33,13 @@ class Team(Model):
 
         self.home_championship = home_championship
 
-        self.robots = Datacache([], "", None)
+        self._robots = Datacache([], "", None)
 
     async def get_robots(self) -> List[Robot]:
-        data = await self.connection.get_robots(self.key, self.robots.last_modified)
-        return [Robot(**s) for s in data]
-        
+        data = await self.connection.get_robots(self.key, self._robots.last_modified)
+        if data is not None:
+            robots = [Robot(**s) for s in data['data']]
+            self._robots = Datacache(robots, data['Last-Modified'], None)
+            return robots
+        else:
+            return self._robots.data
