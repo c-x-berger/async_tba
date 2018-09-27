@@ -1,5 +1,6 @@
 import aiohttp
 from . import constants
+from .conn_state import ConnectionState
 from .model import Model
 from .alliance import Alliance
 from .team import Team
@@ -7,7 +8,7 @@ from .mini_models import Datacache
 
 
 class Event(Model):
-    def __init__(self, session: aiohttp.ClientSession, key: str = None, name: str = None, event_code: str = None,
+    def __init__(self, conn_state: ConnectionState, key: str = None, name: str = None, event_code: str = None,
                  event_type: int = None, district: dict = None, city: str = None,
                  state_prov: str = None, country: str = None, start_date: str = None,
                  end_date: str = None, year: int = None, short_name: str = None,
@@ -17,9 +18,8 @@ class Event(Model):
                  website: str = None, first_event_id: str = None, first_event_code: str = None,
                  webcasts: list = None, division_keys: list = None, parent_event_key: str = None,
                  playoff_type: int = 0, playoff_type_string: str = None):
-        super().__init__(session, key=key)
+        super().__init__(conn_state, key=key)
 
-        self.key = key
         self.name, self.short_name = name, short_name
         self.event_code = event_code
         self.event_type = event_type
