@@ -1,9 +1,11 @@
 import asyncio
 import aiohttp
+import logging
 import time
 from typing import List
 from . import constants
 from .mini_models import Datacache
+logger = logging.getLogger(__name__)
 
 
 class Route():
@@ -43,7 +45,7 @@ class ConnectionState():
                 )
                 return data
             elif resp.status == 304:
-                print("Returning {} from cache".format(url))
+                logger.debug("Returning {} from cache".format(url))
                 return self._cache[url].data
             elif resp.status == 401:
                 # somehow unauthorized..?
@@ -74,3 +76,6 @@ class ConnectionState():
     @property
     def session(self) -> aiohttp.ClientSession:
         return self._session
+
+    async def close(self):
+        await self._session.close()

@@ -42,3 +42,6 @@ class Client():
     @property
     def session(self) -> aiohttp.ClientSession:
         return self._connection_state.session
+
+    async def close(self):
+        await self._connection_state.close()
