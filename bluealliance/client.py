@@ -31,40 +31,13 @@ class Client():
             elif r.status == 304:
                 return self.status
 
-    def get_cache(self, type_: str, key: str) -> Datacache:
-        try:
-            return self._caches[type_][key]
-        except KeyError:
-            return Datacache(None, "", None)
-
-    def set_cache(self, type_: str, key: str, value: Datacache):
-        self._caches[type_][key] = value
-
     async def get_team(self, team_number: int) -> Team:
-        team_key = "frc" + str(team_number)
-        teamcache = self.get_cache("teams", team_key)
-        heads = {'If-Modified-Since': teamcache.last_modified}
-        async with self.session.get(constants.API_BASE_URL + constants.API_TEAM_URL.format(team_key), headers=heads) as resp:
-            if resp.status == 200:
-                team = Team(self._connection_state, **(await resp.json()))
-                # update cache
-                self.set_cache("teams", team_key, Datacache(
-                    team, resp.headers['Last-Modified'], None))
-                return team
-            elif resp.status == 304:
-                return teamcache.data
+        t = await self._connection_state.get_team("frc" + str(team_number))
+        return Team(self._connection_state, **t)
 
     async def get_event(self, event_key: str) -> Event:
-        eventcache = self.get_cache("event", event_key)
-        heads = {'If-Modified-Since': eventcache.last_modified}
-        async with self.session.get(constants.API_BASE_URL + constants.API_EVENT_URL.format(event_key), headers=heads) as resp:
-            if resp.status == 200:
-                event = Event(self._connection_state, **(await resp.json()))
-                self.set_cache("event", event_key, Datacache(
-                    event, resp.headers['Last-Modified'], None))
-                return event
-            elif resp.status == 304:
-                return eventcache.data
+        e = await self._connection_state.get_event(event_key)
+        return Event(self._connection_state, **e)
 
     @property
     def session(self) -> aiohttp.ClientSession:

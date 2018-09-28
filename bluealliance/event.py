@@ -37,23 +37,8 @@ class Event(Model):
         self.division_keys, self.parent_event_key = division_keys, parent_event_key
         self.playoff_type, self.playoff_type_string = playoff_type, playoff_type_string
 
-        self._alliances = Datacache([], "", None)
-        self._teams = Datacache([], "", None)
-
     async def get_alliances(self):
-        data = await self.connection.get_alliances(self.key, self._alliances.last_modified)
-        if data is not None:
-            alliances = [Alliance(self._session, **s) for s in data['data']]
-            self._alliances = Datacache(alliances, data["Last-Modified"], None)
-            return alliances
-        else:
-            return self._alliances.data
+        return [Alliance(self._session, **a) for a in await self.connection.get_alliances(self.key)]
 
     async def get_teams(self):
-        data = await self.connection.get_event_teams(self.key, self._teams.last_modified)
-        if data is not None:
-            teams = [Team(self._connection, **s) for s in data['data']]
-            self._teams = Datacache(teams, data['Last-Modified'], None)
-            return teams
-        else:
-            return self._teams.data
+        return [Team(self._connection, **s) for s in await self.connection.get_event_teams(self.key)]

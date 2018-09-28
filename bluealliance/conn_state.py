@@ -1,5 +1,7 @@
 import asyncio
 import aiohttp
+import time
+from typing import List
 from . import constants
 from .mini_models import Datacache
 
@@ -20,21 +22,38 @@ class ConnectionState():
             headers={'X-TBA-Auth-Key': x_tba_auth_key},
             loop=event_loop if event_loop is not None else asyncio.get_event_loop()
         )
+        # HACK: Technically this cache will grow without bound and might store duplicate data.
+        self._cache = {}  # route: data
 
     async def request(self, route: Route, **kwargs):
         url = route.url
+        if url in self._cache and kwargs['headers']['If-Modified-Since'] == "":
+            if not self._cache[url].expiry < time.time():
+                kwargs['headers']['If-Modified-Since'] = self._cache[url].last_modified
+            else:
+                kwargs['headers']['If-Modified-Since'] = ""
         async with self._session.get(url, **kwargs) as resp:
-            data = await resp.json()
             if 300 > resp.status >= 200:
                 # request OK
-                return {"data": data, "Last-Modified": resp.headers['Last-Modified']}
+                data = await resp.json()
+                c_control = resp.headers['Cache-Control'].split(', ')[1][8:]
+                self._cache[url] = Datacache(
+                    data, resp.headers['Last-Modified'], time.time() +
+                    float(c_control)
+                )
+                return data
             elif resp.status == 304:
-                # TODO: Find a better way to indicate "use cached"
-                print("Use the cache, Luke!")
-                return None
+                print("Returning {} from cache".format(url))
+                return self._cache[url].data
             elif resp.status == 401:
                 # somehow unauthorized..?
                 raise PermissionError()
+
+    def get_team(self, team_key: str, last_modified: str = "") -> dict:
+        return self.request(Route(constants.API_TEAM_URL.format(team_key)), headers=common_header(last_modified))
+
+    def get_event(self, event_key: str, last_modified: str = "") -> dict:
+        return self.request(Route(constants.API_EVENT_URL.format(event_key)), headers=common_header(last_modified))
 
     def get_robots(self, team_key: str, last_modified: str = "") -> list:
         r = Route(constants.API_TEAM_URL.format(team_key) + "/robots")
@@ -42,6 +61,10 @@ class ConnectionState():
 
     def get_alliances(self, event_key: str, last_modified: str = "") -> list:
         r = Route(constants.API_EVENT_URL.format(event_key) + "/alliances")
+        return self.request(r, headers=common_header(last_modified))
+
+    def get_team_event_keys(self, team_key: str, last_modified: str = "") -> List[str]:
+        r = Route(constants.API_TEAM_URL.format(team_key) + "/events/keys")
         return self.request(r, headers=common_header(last_modified))
 
     def get_event_teams(self, event_key: str, last_modified: str = "") -> list:
