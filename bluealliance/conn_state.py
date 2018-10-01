@@ -57,6 +57,9 @@ class ConnectionState():
     def get_event(self, event_key: str, last_modified: str = "") -> dict:
         return self.request(Route(constants.API_EVENT_URL.format(event_key)), headers=common_header(last_modified))
 
+    def get_event_simple(self, event_key: str, last_modified: str = "") -> dict:
+        return self.request(Route(constants.API_EVENT_URL.format(event_key) + "/simple"), headers=common_header(last_modified))
+
     def get_robots(self, team_key: str, last_modified: str = "") -> list:
         r = Route(constants.API_TEAM_URL.format(team_key) + "/robots")
         return self.request(r, headers=common_header(last_modified))
