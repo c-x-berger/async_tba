@@ -4,7 +4,7 @@ from typing import Dict, Union
 from . import constants
 from .conn_state import ConnectionState
 from .team import Team
-from .event import Event
+from .event import Event, SimpleEvent
 from .mini_models import Datacache
 
 
@@ -39,9 +39,17 @@ class Client():
         e = await self._connection_state.get_event(event_key)
         return Event(self._connection_state, **e)
 
+    async def get_simple_event(self, event_key: str) -> Event:
+        e = await self.connection_state.get_event_simple(event_key)
+        return SimpleEvent(self._connection_state, **e)
+
     @property
     def session(self) -> aiohttp.ClientSession:
         return self._connection_state.session
+
+    @property
+    def connection_state(self) -> ConnectionState:
+        return self._connection_state
 
     async def close(self):
         await self._connection_state.close()
