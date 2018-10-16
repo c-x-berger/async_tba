@@ -126,21 +126,18 @@ class Alliance(Model):
 class MatchAlliance(Model):
     def __init__(
         self,
-        session: aiohttp.ClientSession,
+        conn_state: ConnectionState,
         score: int = None,
         team_keys: List[str] = None,
         surrogate_team_keys: Optional[List[str]] = None,
         dq_team_keys: Optional[List[str]] = None,
     ):
-        super().__init__(session)
+        super().__init__(conn_state)
 
         self._score = score
         self._team_keys = team_keys
-        self._teams = {}
         self._surrogate_team_keys = surrogate_team_keys
-        self._surrogate_teams = {}
         self._dq_team_keys = dq_team_keys
-        self._dq_teams = {}
 
     @property
     def score(self) -> int:
@@ -154,26 +151,10 @@ class MatchAlliance(Model):
 
     async def get_teams(self):
         """Team objects for teams on this alliance."""
-        r = []
-        for team_key in self.team_keys:
-            head = {
-                "If-Modified-Since": Model.get_data_from_cache(
-                    self._teams, team_key
-                ).last_modified
-            }
-            async with self._session.get(
-                constants.API_BASE_URL + constants.API_TEAM_URL.format(team_key),
-                headers=head,
-            ) as resp:
-                if resp.status == 200:
-                    team = Team(self._session, **(await resp.json()))
-                    r.append(team)
-                    self._teams[team_key] = Datacache(
-                        team, resp.headers["Last-Modified"], None
-                    )
-                elif resp.status == 304:
-                    r.append(self._teams[team_key].data)
-        return r
+        return [
+            Team(self.connection, **t)
+            for t in [await self.connection.get_team(key) for key in self.team_keys]
+        ]
 
     @property
     def surrogate_team_keys(self) -> List[str]:
@@ -181,29 +162,22 @@ class MatchAlliance(Model):
         return self._surrogate_team_keys
 
     async def get_surrogate_teams(self) -> List[Team]:
-        """TBA team objects of any teams playing as a surrogate."""
-        r = []
-        for team_key in self.surrogate_team_keys:
-            head = {
-                "If-Modified-Since": Model.get_data_from_cache(
-                    self._surrogate_teams, team_key
-                ).last_modified
-            }
-            async with self._session.get(
-                constants.API_BASE_URL + constants.API_TEAM_URL.format(team_key),
-                headers=head,
-            ) as resp:
-                if resp.status == 200:
-                    team = Team(self._session, **(await resp.json()))
-                    r.append(team)
-                    self._surrogate_teams[team_key] = Datacache(
-                        team, resp.headers["Last-Modified"], None
-                    )
-                elif resp.status == 304:
-                    r.append(self._surrogate_teams[team_key].data)
-        return r
+        """Team objects of any teams playing as a surrogate."""
+        return [
+            Team(self.connection, **t)
+            for t in [
+                await self.connection.get_team(key) for key in self.surrogate_team_keys
+            ]
+        ]
 
     @property
     def dq_team_keys(self) -> List[str]:
         """TBA team keys (eg frc254) of any disqualified teams."""
         return self._dq_team_keys
+
+    async def get_dq_teams(self) -> List[Team]:
+        """Team objects of any disqualified teams."""
+        return [
+            Team(self.connection, **t)
+            for t in [self.connection.get_team(key) for key in self.dq_team_keys]
+        ]
