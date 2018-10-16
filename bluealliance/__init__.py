@@ -1,6 +1,6 @@
-__license__ = 'MIT'
-__author__ = 'Caleb Xavier Berger'
-__copyright__ = '(c) 2018 CXB'
+__license__ = "MIT"
+__author__ = "Caleb Xavier Berger"
+__copyright__ = "(c) 2018 CXB"
 
 from .client import Client
 from . import constants

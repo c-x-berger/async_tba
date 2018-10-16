@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 from .mini_models import Datacache
 
 
-class Model():
+class Model:
     def __init__(self, conn: ConnectionState, key: Optional[str] = None):
         self._connection = conn
         if key is not None:
