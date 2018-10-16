@@ -5,5 +5,5 @@ install:
         - pip install -r requirements.txt
         - pip install black
 script:
-        - cd bluealliance; black --check; cd ..
+        - cd bluealliance; black --check .; cd ..
         - python -m tests.simple_test
