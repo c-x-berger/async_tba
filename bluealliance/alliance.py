@@ -1,5 +1,6 @@
 import aiohttp
 from . import constants
+from .conn_state import ConnectionState
 from .mini_models import Datacache
 from .model import Model
 from .team import Team
@@ -9,14 +10,14 @@ from typing import Dict, List, Optional, Union
 class Alliance(Model):
     def __init__(
         self,
-        session: aiohttp.ClientSession,
+        conn_state: ConnectionState,
         name: str = None,
         backup: Dict[str, str] = None,
         declines: List[str] = [],
         picks: List[str] = [],
         status: Dict[str, Union[str, None, Dict[str, int]]] = None,
     ):
-        super().__init__(session)
+        super().__init__(conn_state)
 
         self._name = name
         self._backup = backup
@@ -41,26 +42,16 @@ class Alliance(Model):
         )
 
     async def get_declining_teams(self) -> List[Team]:
-        r = []
-        for team in self._declines:
-            async with self._session.get(
-                constants.API_BASE_URL + constants.API_TEAM_URL.format(team)
-            ) as resp:
-                if resp.status == 200:
-                    t = await resp.json()
-                    r.append(Team(self._session, **t))
-        return r
+        return [
+            Team(self.connection, **s)
+            for s in [await self.connection.get_team(team) for team in self.declines]
+        ]
 
     async def get_teams(self) -> List[Team]:
-        r = []
-        for team in self._picks:
-            async with self._session.get(
-                constants.API_BASE_URL + constants.API_TEAM_URL.format(team)
-            ) as resp:
-                if resp.status == 200:
-                    t = await resp.json()
-                    r.append(Team(self._session, **t))
-        return r
+        return [
+            Team(self.connection, **s)
+            for s in [await self.connection.get_team(team) for team in self.picks]
+        ]
 
     @property
     def name(self) -> str:

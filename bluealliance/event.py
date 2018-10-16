@@ -35,13 +35,13 @@ class SimpleEvent(Model):
 
     async def get_alliances(self):
         return [
-            Alliance(self._session, **a)
+            Alliance(self.connection, **a)
             for a in await self.connection.get_alliances(self.key)
         ]
 
     async def get_teams(self):
         return [
-            Team(self._connection, **s)
+            Team(self.connection, **s)
             for s in await self.connection.get_event_teams(self.key)
         ]
 
