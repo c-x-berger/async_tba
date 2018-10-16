@@ -40,7 +40,7 @@ async def test():
     # events
     logger.info("Testing initial event fetching...")
     await b.get_event("2016nytr")
-    logger.info("Testing team retrieval from cache...")
+    logger.info("Testing event retrieval from cache...")
     event = await b.get_event("2016nytr")
     print("Downloaded data for", event.name)
     # alliances
@@ -49,6 +49,9 @@ async def test():
     logger.info("Testing alliance retrieval from cache...")
     alliances = await event.get_alliances()
     print(alliances)
+    logger.info("Testing team retrieval given an event...")
+    d = await alliances[0].get_teams()
+    print([t.nickname for t in d])
     await b.close()
 
 
