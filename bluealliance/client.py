@@ -14,9 +14,6 @@ class Client:
     ):
         self.status_last_modified = ""
         self.status = {}
-        self._event_cache = {}  # key: Datacache(Event, str, str)
-        self._team_cache = {}  # key: Datacache(Team, str, str)
-        self._caches = {"teams": {}, "event": {}}
         self._connection_state = ConnectionState(
             x_tba_auth_key,
             event_loop if event_loop is not None else asyncio.get_event_loop(),
